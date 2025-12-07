@@ -24,8 +24,8 @@ def intelligent_line_removal(img_cv):
 
     combo = cv2.addWeighted(r, 0.85, g, 0.15, 0)
 
-    thresh = cv2.adaptiveThreshold(combo, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                    cv2.THRESH_BINARY, 15, 10)
+    thresh = cv2.adaptiveThreshold(combo, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                                   cv2.THRESH_BINARY, 15, 10)
     
     clean = cv2.fastNlMeansDenoising(thresh, None, 10, 7, 21)
     return clean

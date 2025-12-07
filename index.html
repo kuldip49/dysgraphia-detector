@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NeuroGraphia System</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; text-align: center; }
+        .container { background: white; max-width: 800px; margin: auto; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; font-size: 24px; margin-bottom: 5px; }
+        h2 { color: #7f8c8d; font-size: 16px; margin-top: 0; font-weight: normal; }
+        
+        button { background: #3498db; color: white; padding: 12px 24px; border: none; font-size: 16px; border-radius: 6px; cursor: pointer; margin-top: 20px; }
+        button:hover { background: #2980b9; }
+
+        .report { display: none; margin-top: 30px; text-align: left; }
+        
+        .score-box { padding: 20px; border-radius: 8px; margin-bottom: 20px; color: white; }
+        .score-green { background: #27ae60; }
+        .score-red { background: #c0392b; }
+        
+        .big-score { font-size: 36px; font-weight: bold; }
+        
+        .text-section { background: #ecf0f1; padding: 15px; border-radius: 6px; border: 1px solid #bdc3c7; }
+        .warning { color: #d35400; font-weight: bold; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Neural Network-Based Rehabilitation System</h1>
+        <h2>For Dysgraphia and Motor Impairments</h2>
+        
+        <input type="file" id="fileInput" accept="image/*" style="margin-top: 20px;">
+        <br>
+        <button onclick="analyze()">Run Analysis</button>
+        <p id="loading" style="display:none; color:blue; font-weight:bold; margin-top:15px;">Processing...</p>
+
+        <div id="report" class="report">
+            <div id="scoreCard" class="score-box">
+                <div>Motor Stability Score</div>
+                <div class="big-score" id="scoreVal">--</div>
+                <div id="diagVal">--</div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <strong>Rehabilitation Plan:</strong>
+                <p id="planVal">--</p>
+            </div>
+
+            <div class="text-section">
+                <strong>Extracted Text:</strong><br>
+                <span id="textVal">--</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function analyze() {
+            const input = document.getElementById('fileInput');
+            if (!input.files[0]) return alert("Select image.");
+
+            const formData = new FormData();
+            formData.append("file", input.files[0]);
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('report').style.display = 'none';
+
+            try {
+                const res = await fetch("/analyze", { method: "POST", body: formData });
+                const data = await res.json();
+
+                // Set Data
+                document.getElementById('scoreVal').innerText = data.report.score + "/100";
+                document.getElementById('diagVal').innerText = data.report.diagnosis;
+                document.getElementById('planVal').innerText = data.report.plan;
+                
+                const textElem = document.getElementById('textVal');
+                textElem.innerText = data.ocr_text;
+
+                // If Confidence is Low, color the text warning orange
+                if (data.ocr_status === "Low Confidence") {
+                    textElem.className = "warning";
+                } else {
+                    textElem.className = "";
+                }
+
+                // Set Colors
+                const scoreCard = document.getElementById('scoreCard');
+                if (data.report.score < 50) {
+                    scoreCard.className = "score-box score-red";
+                } else {
+                    scoreCard.className = "score-box score-green";
+                }
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('report').style.display = 'block';
+
+            } catch (e) {
+                alert("Error.");
+                console.error(e);
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
